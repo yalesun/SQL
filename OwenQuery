@@ -1,0 +1,19 @@
+-- 1
+
+select date(convert_tz(p.listed_at, "+00:00", "America/Chicago")) as 'date', count(p.product_id) from product_summaries p 
+where p.status = 'approved'
+and p.creator_id in (select r.user_id from roles_users r where r.role_id = 8)
+group by date(convert_tz(p.listed_at, "+00:00", "America/Chicago"));
+
+-- 2
+select t.days, t.name, count(t.id)
+from 
+(select p.id as 'id', p.name as 'name', li.quantity, timestampdiff(day, o.completed_at, li.updated_at) as 'days' from line_items li 
+join product_summaries p 
+on p.master_variant_id = li.variant_id
+join orders o on o.id = li.order_id
+where o.state = 'complete'
+and p.name like '%starbucks%'
+and convert_tz(o.completed_at, "+00:00", "America/Chicago")>= '2014-06-01'
+and li.quantity = '0') as t
+group by t.days, t.name; 
